@@ -1,65 +1,26 @@
-# Taxi-v3 Q-Learning Agent
+# Taxi-v3 Q-Learning
 
-A compact reinforcement learning project that trains a tabular Q-learning agent to solve the classic `Taxi-v3` environment from Gymnasium.
+This is a small reinforcement learning project using the `Taxi-v3` environment from Gymnasium.
 
-Note: newer Gymnasium releases promote `Taxi-v4`, so this project pins Gymnasium to a compatible version range for `Taxi-v3`.
+The goal is to train a taxi agent to pick up a passenger and drop them off at the correct destination. I used tabular Q-learning because the environment has a small discrete state space, so a neural network is not really necessary here.
 
-This project is designed to be easy to explain on a CV or in an interview: the algorithm is implemented from scratch, the training loop is reproducible, and the outputs show learning progress clearly.
+The project includes training, evaluation, saved metrics, plots, a small hyperparameter comparison, and a few tests for the agent logic.
 
-## Project Highlights
+## Environment
 
-- Implements tabular Q-learning with epsilon-greedy exploration.
-- Trains and evaluates on Gymnasium `Taxi-v3`.
-- Saves the learned Q-table and reward plots.
-- Exports training metrics as CSV and JSON for analysis.
-- Compares multiple hyperparameter settings.
-- Includes a readable code structure and line-by-line explanation.
-- Adds lightweight tests for the agent logic.
+`Taxi-v3` is a grid-world task. The agent can move around the map, pick up a passenger, and drop the passenger off.
 
-## What Taxi-v3 Is
+Rewards:
 
-`Taxi-v3` is a grid-world reinforcement learning task. The taxi must pick up a passenger from one location and drop them off at the correct destination.
+- successful drop-off gives a positive reward
+- every step has a small negative reward
+- illegal pickup or drop-off actions get a larger penalty
 
-The agent receives:
-
-- Positive reward for a successful drop-off.
-- Negative reward for each time step.
-- Larger penalties for illegal pickup or drop-off actions.
-
-The goal is to learn a policy that completes trips quickly while avoiding illegal actions.
-
-## Folder Structure
-
-```text
-myProjk/
-├── README.md
-├── requirements.txt
-├── .gitignore
-├── docs/
-│   └── line_by_line_explanation.md
-├── src/
-│   └── taxi_q_learning/
-│       ├── __init__.py
-│       ├── agent.py
-│       ├── experiments.py
-│       ├── evaluate.py
-│       ├── train.py
-│       └── utils.py
-└── tests/
-    └── test_agent.py
-```
+The agent starts with no knowledge of the environment and learns better actions by updating a Q-table.
 
 ## Setup
 
 From the project folder:
-
-```bash
-source myProjk/bin/activate
-pip install -r requirements.txt
-pip install -e .
-```
-
-If you upload only this project folder to GitHub, create the environment inside the project instead:
 
 ```bash
 python -m venv myProjk
@@ -68,57 +29,63 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
-## Train
+I pinned Gymnasium below `1.3.0` because newer versions prefer `Taxi-v4`, while this project is specifically for `Taxi-v3`.
+
+## Project Structure
+
+```text
+.
+├── README.md
+├── requirements.txt
+├── pyproject.toml
+├── src/
+│   └── taxi_q_learning/
+│       ├── agent.py
+│       ├── train.py
+│       ├── evaluate.py
+│       ├── experiments.py
+│       └── utils.py
+├── tests/
+│   └── test_agent.py
+└── docs/
+    └── github_upload.md
+```
+
+## Training
+
+Run:
 
 ```bash
 python -m taxi_q_learning.train
 ```
 
-This creates:
+This trains the agent and writes the outputs to `artifacts/`:
 
 ```text
-artifacts/q_table.npy
-artifacts/training_rewards.png
-artifacts/training_dashboard.png
-artifacts/training_metrics.csv
-artifacts/training_summary.json
+q_table.npy
+training_rewards.png
+training_dashboard.png
+training_metrics.csv
+training_summary.json
 ```
 
-## Run Experiments
+The Q-table is saved so the agent can be evaluated later without training again.
 
-```bash
-python -m taxi_q_learning.experiments
-```
+## Evaluation
 
-This trains several Q-learning configurations and writes:
-
-```text
-artifacts/experiments/experiment_results.csv
-```
-
-The comparison includes learning rate, discount factor, epsilon decay, final training reward, evaluation reward, and success rate.
-
-## Evaluate
+Run:
 
 ```bash
 python -m taxi_q_learning.evaluate
 ```
 
-To watch one rendered episode in the terminal:
+To see one episode rendered in the terminal:
 
 ```bash
-python -m taxi_q_learning.evaluate --render
+python -m taxi_q_learning.evaluate --episodes 1 --render
 ```
 
-## Run Tests
-
-```bash
-pytest
-```
-
-## Results
-
-Using the default configuration for 20,000 training episodes, the trained policy reached:
+With the default training setup, I got:
 
 ```text
 Evaluation episodes: 100
@@ -126,20 +93,21 @@ Average reward: 7.49
 Success rate: 100.0%
 ```
 
-The reward curve starts strongly negative because the agent explores random moves, illegal pickups, and inefficient routes. As epsilon decays, the agent exploits the learned Q-table more often, reaches the passenger and destination faster, and stabilizes at a positive reward.
+## Experiments
 
-## Experiment Design
+I also compared a few hyperparameter settings:
 
-The project includes a small hyperparameter study:
+```bash
+python -m taxi_q_learning.experiments
+```
 
-- `baseline`: balanced learning rate and exploration decay.
-- `faster_learning`: higher learning rate to adapt more aggressively.
-- `slower_exploration_decay`: keeps exploration high for longer.
-- `lower_future_discount`: values future rewards less strongly.
+The results are saved to:
 
-This makes the project easier to discuss as an applied AI experiment: not only “I trained a model,” but “I compared training settings and evaluated their effect.”
+```text
+artifacts/experiments/experiment_results.csv
+```
 
-Default experiment results over 8,000 training episodes and 100 evaluation episodes:
+Results from my run:
 
 | Experiment | Learning rate | Discount factor | Epsilon decay | Final train avg reward | Eval avg reward | Success rate |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -148,24 +116,40 @@ Default experiment results over 8,000 training episodes and 100 evaluation episo
 | slower_exploration_decay | 0.10 | 0.95 | 0.9998 | -6.21 | 8.05 | 100% |
 | lower_future_discount | 0.10 | 0.80 | 0.9995 | 4.59 | 6.01 | 99% |
 
-The slower exploration schedule performs worse during training because the agent keeps taking random actions for longer. The lower discount factor reaches a high success rate, but its lower average reward suggests less efficient routes.
+The slower exploration decay keeps the agent exploring for longer, so the training reward is worse even though the final evaluated policy still works. The lower discount factor also works, but the average reward is lower, which suggests the learned routes are less efficient.
 
-## CV Description
+## Q-Learning Update
 
-Built and evaluated a reinforcement learning agent for Gymnasium Taxi-v3 using tabular Q-learning. Implemented epsilon-greedy exploration, Bellman Q-value updates, model checkpointing, metric logging, reward and episode-length visualization, hyperparameter comparison, and unit tests in a reproducible Python project.
+The agent stores values in a Q-table:
 
-## Algorithm Summary
+```text
+Q[state, action]
+```
 
-Q-learning learns an action-value table `Q[state, action]`.
-
-At each step, the agent:
-
-1. Chooses an action using epsilon-greedy exploration.
-2. Receives a reward and observes the next state.
-3. Updates the Q-value using the Bellman equation:
+After each action, it updates the table with:
 
 ```text
 Q(s, a) = Q(s, a) + alpha * (reward + gamma * max(Q(s_next)) - Q(s, a))
 ```
 
-After enough training, the best action for a state is the action with the largest Q-value.
+Where:
+
+- `alpha` is the learning rate
+- `gamma` is the discount factor
+- `max(Q(s_next))` is the best estimated future value
+
+During training the agent uses epsilon-greedy action selection. At the beginning it explores a lot, and over time it relies more on the learned Q-values.
+
+## Tests
+
+Run:
+
+```bash
+pytest
+```
+
+The tests check the Q-table shape, greedy action selection, the Q-learning update, and terminal-state behavior.
+
+## What I Learned
+
+This project helped me understand how tabular reinforcement learning works without hiding the important parts behind a library model. The most useful parts were implementing the Bellman update, seeing how epsilon decay changes learning, and comparing how different hyperparameters affect training and evaluation.
