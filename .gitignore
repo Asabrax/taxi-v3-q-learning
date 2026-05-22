@@ -9,5 +9,5 @@ __pycache__/
 .vscode/
 
 artifacts*/
-docs/line_by_line_explanation.md
+local_notes/
 .DS_Store
