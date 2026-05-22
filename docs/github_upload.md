@@ -4,7 +4,7 @@ Use these commands from the project folder when you are ready to publish.
 
 ```bash
 git init
-git add README.md LICENSE pyproject.toml requirements.txt src tests docs .gitignore
+git add README.md pyproject.toml requirements.txt src tests docs .gitignore
 git commit -m "Add Taxi-v3 Q-learning project"
 git branch -M main
 git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPOSITORY.git
