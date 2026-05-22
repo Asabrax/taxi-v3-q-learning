@@ -1,0 +1,13 @@
+.venv/
+myProjk/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.vscode/
+
+artifacts*/
+docs/line_by_line_explanation.md
+.DS_Store
