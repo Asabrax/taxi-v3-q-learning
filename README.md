@@ -25,8 +25,8 @@ At first the agent behaves almost randomly. Over many episodes it updates a Q-ta
 ## Setup
 
 ```bash
-python -m venv myProjk
-source myProjk/bin/activate
+python -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 pip install -e .
 ```
